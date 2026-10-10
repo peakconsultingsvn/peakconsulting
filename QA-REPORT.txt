@@ -1,0 +1,52 @@
+Updated project verification
+
+JavaScript syntax checks: PASS.
+Original Peak Dispatch logo preserved.
+
+> peak-consulting@1.0.0 test
+> node --test tests/*.test.js
+
+▶ API and static server integration
+  ✔ Serves the website and security headers (62.065521ms)
+  ✔ Invalid input returns structured validation errors (1884.326764ms)
+  ✔ Unconfigured email never reports success (8.953223ms)
+  ✔ Partnership endpoint validates contact method (4.473713ms)
+  ✔ Partnership endpoint never simulates email success (3.091217ms)
+  ✔ Rejects unapproved origin (2.244661ms)
+  ✔ Rejects oversized request (4.054887ms)
+  ✔ Rejects malformed JSON (3.814388ms)
+  ✔ Unsupported method returns JSON (4.223645ms)
+  ✔ Rate limit returns structured error (68.134393ms)
+✔ API and static server integration (44295.544495ms)
+✔ Partnership accepts email only (1.836064ms)
+✔ Partnership accepts phone only (0.277127ms)
+✔ Partnership requires a contact method (1.391702ms)
+✔ Partnership rejects invalid email (0.255609ms)
+✔ Partnership rejects invalid phone (0.326573ms)
+✔ Partnership rejects header injection (0.161128ms)
+✔ Partnership requires consent (0.249704ms)
+✔ Partnership rejects honeypot (0.269326ms)
+✔ Partnership rejects fast submissions (0.533221ms)
+✔ Partnership drops unknown fields (0.437401ms)
+✔ Accepts valid inquiry (2.857273ms)
+✔ Normalizes whitespace and drops unknown fields (0.431056ms)
+✔ Rejects invalid email (0.295889ms)
+✔ Rejects header injection (0.305359ms)
+✔ Requires explicit consent (0.251517ms)
+✔ Rejects honeypot submissions (0.197055ms)
+✔ Rejects too-fast submissions (0.209843ms)
+✔ Rejects unsupported service and long details (0.169227ms)
+✔ Rejects arrays, null and non-text values (0.580112ms)
+✔ Nine unique clients, correct category distribution (2.001704ms)
+✔ No invented client link for Baumarket (0.612085ms)
+ℹ tests 32
+ℹ suites 0
+ℹ pass 32
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 45565.94913
+
+Live SMTP delivery, visual browser rendering and real-device accessibility checks were not performed.
+SMTP_PASSWORD is blank; no exposed credential is included.

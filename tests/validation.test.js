@@ -1,0 +1,13 @@
+import test from'node:test';import assert from'node:assert/strict';import{validateContact}from'../server/validation.js';import{clients}from'../public/clients.js';
+const valid=()=>({fullName:'Example Contact',company:'Example Organization',email:'contact@example.org',phone:'+389 78 395 246',service:'Web Development',budget:'',details:'We would like to discuss a new corporate website.',consent:true,website:'',startedAt:Date.now()-5000});
+test('Accepts valid inquiry',()=>assert.deepEqual(validateContact(valid()).errors,{}));
+test('Normalizes whitespace and drops unknown fields',()=>{const d=valid();d.fullName='  Example Contact  ';d.secret='discard';const result=validateContact(d);assert.equal(result.data.fullName,'Example Contact');assert.equal(result.data.secret,undefined);});
+test('Rejects invalid email',()=>{const d=valid();d.email='not-an-email';assert.ok(validateContact(d).errors.email);});
+test('Rejects header injection',()=>{const d=valid();d.email='contact@example.org\r\nBcc: attacker@example.org';assert.ok(validateContact(d).errors.email);});
+test('Requires explicit consent',()=>{const d=valid();d.consent='true';assert.ok(validateContact(d).errors.consent);});
+test('Rejects honeypot submissions',()=>{const d=valid();d.website='spam';assert.ok(validateContact(d).errors.form);});
+test('Rejects too-fast submissions',()=>{const d=valid();d.startedAt=Date.now();assert.ok(validateContact(d).errors.form);});
+test('Rejects unsupported service and long details',()=>{const d=valid();d.service='invalid';d.details='x'.repeat(5001);const e=validateContact(d).errors;assert.ok(e.service);assert.ok(e.details);});
+test('Rejects arrays, null and non-text values',()=>{assert.ok(validateContact(null).errors.form);assert.ok(validateContact([]).errors.form);const d=valid();d.fullName={bad:true};assert.ok(validateContact(d).errors.fullName);});
+test('Nine unique clients, correct category distribution',()=>{assert.equal(clients.length,9);assert.equal(new Set(clients.map(c=>c.id)).size,9);assert.equal(clients.filter(c=>c.category==='AI & Automation').length,3);assert.equal(clients.filter(c=>c.category==='Web Development').length,4);assert.equal(clients.filter(c=>c.category==='Application Development').length,2);});
+test('No invented client link for Baumarket',()=>assert.equal(clients.find(c=>c.id==='baumarket').websiteUrl,''));

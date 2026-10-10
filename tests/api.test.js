@@ -1,0 +1,18 @@
+import test from'node:test';import assert from'node:assert/strict';import{spawn}from'node:child_process';
+const port=33217,base=`http://localhost:${port}`;
+const child=spawn(process.execPath,['server.js'],{cwd:new URL('..',import.meta.url),env:{...process.env,PORT:String(port),FRONTEND_URL:base,NODE_ENV:'development',CONTACT_RATE_LIMIT:'20',SMTP_HOST:'',SMTP_USER:'',SMTP_PASSWORD:'',SMTP_FROM_EMAIL:''},stdio:'ignore'});
+async function ready(){for(let i=0;i<1200;i++){try{const response=await fetch(`${base}/api/health`);if(response.ok)return;}catch{}await new Promise(r=>setTimeout(r,50));}throw new Error('Server did not start.');}
+const post=(body,headers={})=>fetch(`${base}/api/contact`,{method:'POST',headers:{'Content-Type':'application/json',...headers},body:JSON.stringify(body)});
+const valid=()=>({fullName:'Example Contact',company:'Example Organization',email:'contact@example.org',phone:'+389 78 395 246',service:'Web Development',budget:'',details:'We would like to discuss a new corporate website.',consent:true,website:'',startedAt:Date.now()-5000});
+test('API and static server integration',async t=>{try{await ready();
+ await t.test('Serves the website and security headers',async()=>{const response=await fetch(base);assert.equal(response.status,200);assert.match(await response.text(),/Peak Consulting/);assert.ok(response.headers.get('content-security-policy'));assert.equal(response.headers.get('x-content-type-options'),'nosniff');assert.equal(response.headers.get('x-powered-by'),null);});
+ await t.test('Invalid input returns structured validation errors',async()=>{const response=await post({});assert.equal(response.status,422);const payload=await response.json();assert.equal(payload.success,false);assert.ok(payload.errors.email);});
+ await t.test('Unconfigured email never reports success',async()=>{const response=await post(valid());assert.equal(response.status,503);assert.equal((await response.json()).success,false);});
+ await t.test('Partnership endpoint validates contact method',async()=>{const response=await fetch(`${base}/api/partnership`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:'',phone:'',consent:true,website:'',startedAt:Date.now()-5000})});assert.equal(response.status,422);assert.ok((await response.json()).errors.email);});
+ await t.test('Partnership endpoint never simulates email success',async()=>{const response=await fetch(`${base}/api/partnership`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:'sales@example.org',phone:'',consent:true,website:'',startedAt:Date.now()-5000})});assert.equal(response.status,503);assert.equal((await response.json()).success,false);});
+ await t.test('Rejects unapproved origin',async()=>{const response=await post(valid(),{Origin:'https://unapproved.example'});assert.equal(response.status,403);});
+ await t.test('Rejects oversized request',async()=>{const response=await post({details:'x'.repeat(20000)});assert.equal(response.status,413);assert.equal((await response.json()).success,false);});
+ await t.test('Rejects malformed JSON',async()=>{const response=await fetch(`${base}/api/contact`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{'});assert.equal(response.status,400);});
+ await t.test('Unsupported method returns JSON',async()=>{const response=await fetch(`${base}/api/contact`);assert.equal(response.status,405);assert.equal((await response.json()).success,false);});
+ await t.test('Rate limit returns structured error',async()=>{let response;for(let i=0;i<22;i++)response=await post({});assert.equal(response.status,429);assert.equal((await response.json()).code,'RATE_LIMITED');});
+}finally{child.kill('SIGTERM');}});

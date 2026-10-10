@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+# Configure canonicalUrl and run npm run seo to generate a sitemap.

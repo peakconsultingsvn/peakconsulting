@@ -1,0 +1,14 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {validatePartnership} from '../server/validation.js';
+const valid=()=>({email:'sales@example.org',phone:'',consent:true,website:'',startedAt:Date.now()-5000});
+test('Partnership accepts email only',()=>assert.deepEqual(validatePartnership(valid()).errors,{}));
+test('Partnership accepts phone only',()=>{const d=valid();d.email='';d.phone='+389 78 395 246';assert.deepEqual(validatePartnership(d).errors,{});});
+test('Partnership requires a contact method',()=>{const d=valid();d.email='';assert.ok(validatePartnership(d).errors.email);});
+test('Partnership rejects invalid email',()=>{const d=valid();d.email='bad';assert.ok(validatePartnership(d).errors.email);});
+test('Partnership rejects invalid phone',()=>{const d=valid();d.phone='bad';assert.ok(validatePartnership(d).errors.phone);});
+test('Partnership rejects header injection',()=>{const d=valid();d.email='sales@example.org\r\nBcc: other@example.org';assert.ok(validatePartnership(d).errors.email);});
+test('Partnership requires consent',()=>{const d=valid();d.consent=false;assert.ok(validatePartnership(d).errors.consent);});
+test('Partnership rejects honeypot',()=>{const d=valid();d.website='spam';assert.ok(validatePartnership(d).errors.form);});
+test('Partnership rejects fast submissions',()=>{const d=valid();d.startedAt=Date.now();assert.ok(validatePartnership(d).errors.form);});
+test('Partnership drops unknown fields',()=>{const d=valid();d.secret='ignore';assert.equal(validatePartnership(d).data.secret,undefined);});

@@ -1,0 +1,23 @@
+{
+  "name": "peak-consulting",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test tests/*.test.js",
+    "check": "node --check server.js && node --check server/contact.js && node --check server/validation.js && node --check public/app.js && node --check public/partnership.js",
+    "seo": "node scripts/seo.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "express-rate-limit": "^8.1.0",
+    "nodemailer": "^7.0.10",
+    "dotenv": "^17.2.3"
+  }
+}
